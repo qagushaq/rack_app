@@ -11,20 +11,27 @@ class DataFormat
 
   def initialize(params_string)
     @params_string = params_string
-    check_formats
+    @accepted_params = []
+    @rejected_params = []
   end
 
   def converted_formats
-    time_format = @accepted_params.map { |p| FORMATS[p.to_sym] }
-    Time.now.strftime(time_format.join('-'))
+    Time.now.strftime(@accepted_params.join('-'))
   end
-
-  private
 
   def check_formats
     params = @params_string.split(',')
-    @accepted_params = params.select { |p| FORMATS.key?(p.to_sym) }
-    @rejected_params = params - @accepted_params
+    params.each do |param|
+      if FORMATS.key?(param.to_sym)
+        @accepted_params << FORMATS[param.to_sym]
+      else
+        @rejected_params << param
+      end
+    end
+  end
+
+  def success?
+    @rejected_params.empty?
   end
 
 end

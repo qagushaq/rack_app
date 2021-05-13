@@ -13,37 +13,30 @@ class App
   def operate_request(request)
     params_string = request.params['format']
     @data_format = DataFormat.new(params_string)
-
-    request_query_string_valid? ? response_success : response_unknown_formats
-  end
-
-  def request_query_string_valid?
-    @data_format.rejected_params.empty?
+    @data_format.check_formats
+    @data_format.success? ? response_success : response_unknown_formats
   end
 
   def request_valid?(request)
-    request.get? && request.path == '/time' &&
-    !request.params.empty? && !request.params['format'].nil?
+    request.get? &&
+    request.path == '/time' &&
+    request.params['format']
   end
 
-  def response(options)
-    [
-      options[:status],
-      {'Content-Type' => "text/html"},
-      [options[:body]]
-    ]
+  def response(status, body)
+    Rack::Response.new(body, status, {'Content-Type' => 'text/plain'}).finish
   end
 
   def response_bad_request
-    response({status: 404, body: 'Check your request'})
+    response(404, 'Check your request')
   end
 
   def response_success
-    response({status: 200, body: @data_format.converted_formats})
+    response(200, @data_format.converted_formats)
   end
 
   def response_unknown_formats
-    response({status: 400, body: "Unknown time format #{@data_format.rejected_params}"})
+    response(400,"Unknown time format #{@data_format.rejected_params}")
   end
 
 end
